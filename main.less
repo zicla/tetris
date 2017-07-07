@@ -3,14 +3,14 @@
 @heightNum: 20;
 
 .stage {
-	background-color: #eeeeee;
+	background-color: black;
 	width: @grid*@widthNum;
 	height: @grid*@heightNum;
 	margin: 0 auto;
 	padding: 0;
 
 	@grid-border-color: #aaa;
-	.grid {
+	span {
 		width: @grid;
 		height: @grid;
 		display: block;
@@ -32,6 +32,9 @@
 		}
 		&.cyan {
 			background-color: cyan;
+		}
+		&.red {
+			background-color: darkred;
 		}
 
 
