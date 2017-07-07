@@ -59,17 +59,47 @@ Shape.prototype.setCategory = function (cate) {
 //往下面掉一格
 Shape.prototype.dropOneStep = function () {
 
-	this.setCategory(0);
 
-	this.y++;
+	if (this.y < HEIGH_NUM - 1) {
+		this.setCategory(0);
 
-	if (this.y == 20) {
-		this.y = 19;
+		this.y++;
+
+		this.setCategory(2);
 	}
 
-	this.setCategory(2);
+	this.refresh();
 
 }
+
+//往左移动一格
+Shape.prototype.moveLeftOneStep = function () {
+
+	if (this.x > 0) {
+		this.setCategory(0);
+
+		this.x--;
+
+
+		this.setCategory(2);
+	}
+	this.refresh();
+}
+
+//往右移动一格
+Shape.prototype.moveRightOneStep = function () {
+
+	if (this.x < WIDTH_NUM - 1) {
+		this.setCategory(0);
+
+		this.x++;
+
+
+		this.setCategory(2);
+	}
+	this.refresh();
+}
+
 
 //类别2 L1型
 //类别3 L2型
@@ -77,7 +107,8 @@ Shape.prototype.dropOneStep = function () {
 //类别5 Z2型
 //类别6 O型
 //类别7 T型
-Shape.prototype.refreshCoords = function () {
+Shape.prototype.refresh = function () {
+
 
 	//类别1 长条形
 	if (this.type == 0) {
@@ -108,11 +139,8 @@ Shape.prototype.refreshCoords = function () {
 
 	}
 
-}
 
-Shape.prototype.refresh = function () {
-
-
+	//刷新画布每个grid的新颜色。
 	for (var i = 0; i < this.coords.length; i++) {
 
 		var coord = this.coords[i];
@@ -166,6 +194,9 @@ function Game() {
 
 	this.width = WIDTH_NUM;
 	this.height = HEIGH_NUM;
+
+	//当前正在掉落的shape
+	this.shape = null;
 
 }
 
@@ -221,14 +252,59 @@ Game.prototype.refreshStage = function () {
 
 }
 
+//监听键盘点击事件
+Game.prototype.listenEvent = function () {
+
+	var that = this;
+
+	$("body").keydown(function (e) {
+
+		//上
+		if (e.keyCode == 38) {
+
+		}
+		//右
+		else if (e.keyCode == 39) {
+			that.shape.moveRightOneStep();
+		}
+		//下
+		else if (e.keyCode == 40) {
+
+		}
+		//左
+		else if (e.keyCode == 37) {
+			that.shape.moveLeftOneStep();
+		}
+	})
+}
+
 
 Game.prototype.init = function () {
+
+	this.listenEvent();
+
 
 	this.fillGrids();
 
 	this.prepareStage();
 
 	this.refreshStage();
+
+	this.shape = new Shape(this);
+	this.shape.x = 5;
+	this.shape.y = 5;
+	this.shape.color = 1;
+	this.shape.direction = Direction.UP;
+	this.shape.type = 0;
+
+	var that = this;
+
+	setInterval(function () {
+
+		that.shape.dropOneStep();
+
+	}, 1000);
+
 }
 
 
@@ -237,22 +313,6 @@ $(function () {
 	var game = new Game();
 
 	game.init();
-
-	var shape = new Shape(game);
-	shape.x = 5;
-	shape.y = 5;
-	shape.color = 1;
-	shape.direction = Direction.UP;
-	shape.type = 0;
-
-
-	setInterval(function () {
-
-		shape.dropOneStep();
-
-		shape.refreshCoords();
-		shape.refresh();
-	}, 1000);
 
 
 });
