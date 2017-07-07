@@ -1,0 +1,30 @@
+.stage {
+  background-color: #eeeeee;
+  width: 390px;
+  height: 600px;
+  margin: 0 auto;
+  padding: 0;
+}
+.stage .grid {
+  width: 30px;
+  height: 30px;
+  display: block;
+  float: left;
+  margin: 0;
+  padding: 0;
+  border-right: 1px solid #aaa;
+  border-bottom: 1px solid #aaa;
+  box-sizing: border-box;
+}
+.stage .grid.orange {
+  background-color: orange;
+}
+.stage .grid.olive {
+  background-color: olive;
+}
+.stage .grid.cornflowerblue {
+  background-color: cornflowerblue;
+}
+.stage .grid.cyan {
+  background-color: cyan;
+}
