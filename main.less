@@ -8,13 +8,13 @@
 	height: @grid*@heightNum;
 	margin: 0 auto;
 	padding: 0;
+	position: relative;
 
 	@grid-border-color: #aaa;
 	span {
 		width: @grid;
 		height: @grid;
-		display: block;
-		float: left;
+		position: absolute;
 		margin: 0;
 		padding: 0;
 		border-right: 1px solid @grid-border-color;
@@ -36,7 +36,6 @@
 		&.red {
 			background-color: darkred;
 		}
-
 
 	}
 }

@@ -4,12 +4,12 @@
   height: 600px;
   margin: 0 auto;
   padding: 0;
+  position: relative;
 }
 .stage span {
   width: 30px;
   height: 30px;
-  display: block;
-  float: left;
+  position: absolute;
   margin: 0;
   padding: 0;
   border-right: 1px solid #aaa;
