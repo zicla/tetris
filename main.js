@@ -14,6 +14,15 @@ Direction.RIGHT = 1;
 Direction.DOWN = 2;
 Direction.LEFT = 3;
 
+//0:地板，啥都不是。 1: 岩石，固定不动了。 2: 形状中的grid
+function Category() {
+
+}
+Category.GROUND = 0;
+Category.SOLID = 1;
+Category.MOVE = 2;
+
+
 //形状类
 function Shape(game) {
 
@@ -47,7 +56,7 @@ Shape.prototype.setCategory = function (cate) {
 		var grid = this.game.grids[x][y];
 		grid.category = cate;
 
-		if (cate == 0) {
+		if (cate == Category.GROUND) {
 			grid.color = 0;
 		}
 
@@ -61,11 +70,11 @@ Shape.prototype.dropOneStep = function () {
 
 
 	if (this.y < HEIGH_NUM - 1) {
-		this.setCategory(0);
+		this.setCategory(Category.GROUND);
 
 		this.y++;
 
-		this.setCategory(2);
+		this.setCategory(Category.MOVE);
 	}
 
 	this.refresh();
@@ -76,12 +85,12 @@ Shape.prototype.dropOneStep = function () {
 Shape.prototype.moveLeftOneStep = function () {
 
 	if (this.x > 0) {
-		this.setCategory(0);
+		this.setCategory(Category.GROUND);
 
 		this.x--;
 
 
-		this.setCategory(2);
+		this.setCategory(Category.MOVE);
 	}
 	this.refresh();
 }
@@ -90,12 +99,12 @@ Shape.prototype.moveLeftOneStep = function () {
 Shape.prototype.moveRightOneStep = function () {
 
 	if (this.x < WIDTH_NUM - 1) {
-		this.setCategory(0);
+		this.setCategory(Category.GROUND);
 
 		this.x++;
 
 
-		this.setCategory(2);
+		this.setCategory(Category.MOVE);
 	}
 	this.refresh();
 }
@@ -173,7 +182,7 @@ function Grid() {
 	this.color = 0;
 
 	//0:地板，啥都不是。 1: 岩石，固定不动了。 2: 形状中的grid
-	this.category = 0;
+	this.category = Category.GROUND;
 
 	this.$dom = $("<span></span>");
 }
