@@ -23,6 +23,38 @@ Category.SOLID = 1;
 Category.MOVE = 2;
 
 
+//类别2 L1型
+//类别3 L2型
+//类别4 Z1型
+//类别5 Z2型
+//类别6 O型
+//类别7 T型
+function Type() {
+
+}
+Type.I = 0
+Type.L1 = 1;
+Type.L2 = 2;
+Type.Z1 = 3;
+Type.Z2 = 4;
+Type.O = 5;
+Type.T = 6;
+
+Type.ALL = [];
+Type.ALL[Type.I] = [0x4444, 0x0f00, 0x4444, 0x0f00];
+Type.ALL[Type.L1] = [0x4460, 0x0740, 0x0622, 0x02e0];
+Type.ALL[Type.L2] = [0x2260, 0x0470, 0x0644, 0x0e20];
+Type.ALL[Type.Z1] = [0x0630, 0x0264, 0x0c60, 0x2640];
+Type.ALL[Type.Z2] = [0x0360, 0x0462, 0x06c0, 0x4620];
+Type.ALL[Type.O] = [0x0660, 0x0660, 0x0660, 0x0660];
+Type.ALL[Type.T] = [0x04e0, 0x4640, 0x0720, 0x0262];
+
+
+function Color() {
+
+}
+Color.ALL = ["", "orange", "olive", "cornflowerblue", "cyan", "red"];
+
 //形状类
 function Shape(game) {
 
@@ -32,7 +64,7 @@ function Shape(game) {
 	this.y = 0;
 
 	//类别。7种类别
-	this.type = 0;
+	this.type = Type.I;
 
 	//方向。4中方向 上右下左
 	this.direction = Direction.UP;
@@ -40,7 +72,8 @@ function Shape(game) {
 	//颜色
 	this.color = 0;
 
-	this.coords = [];
+	//一个16进制数，代表了4*4的格子中哪4个grid高亮。
+	this.hex = 0xffff;
 
 }
 
@@ -48,19 +81,38 @@ function Shape(game) {
 //将当前的形状全部置为一种category
 Shape.prototype.setCategory = function (cate) {
 
-	//把之前的shap占用的grid全部置为category=0;
-	for (var i = 0; i < this.coords.length; i++) {
-		var coord = this.coords[i];
-		var x = coord[0];
-		var y = coord[1];
-		var grid = this.game.grids[x][y];
-		grid.category = cate;
+	// 0100 0100 0100 0100
+	var binary = this.hex.toString(2);
+	for (var n = 0; n < 16 - binary.length; n++) {
+		binary = "0" + binary;
+	}
+	for (var y0 = 0; y0 < 4; y0++) {
 
-		if (cate == Category.GROUND) {
-			grid.color = 0;
+		for (var x0 = 0; x0 < 4; x0++) {
+
+			var index = y0 * 4 + x0;
+			var bit = binary.indexOf(index);
+
+			var x = this.x + x0;
+			var y = this.y + y0;
+
+			if (bit == "1") {
+				var grids = this.game.grids;
+
+				var grid = grids[x][y];
+
+				grid.category = cate;
+
+				if (cate == Category.GROUND) {
+					grid.color = 0;
+				}
+
+			}
+
 		}
 
 	}
+
 
 }
 
@@ -69,7 +121,7 @@ Shape.prototype.setCategory = function (cate) {
 Shape.prototype.dropOneStep = function () {
 
 
-	if (this.y < HEIGH_NUM - 1) {
+	if (this.y + 3 < HEIGH_NUM - 1) {
 		this.setCategory(Category.GROUND);
 
 		this.y++;
@@ -98,7 +150,7 @@ Shape.prototype.moveLeftOneStep = function () {
 //往右移动一格
 Shape.prototype.moveRightOneStep = function () {
 
-	if (this.x < WIDTH_NUM - 1) {
+	if (this.x + 3 < WIDTH_NUM - 1) {
 		this.setCategory(Category.GROUND);
 
 		this.x++;
@@ -118,54 +170,36 @@ Shape.prototype.moveRightOneStep = function () {
 //类别7 T型
 Shape.prototype.refresh = function () {
 
+	this.hex = Type.ALL[this.type][this.direction];
 
-	//类别1 长条形
-	if (this.type == 0) {
+	// 0100 0100 0100 0100
+	var binary = this.hex.toString(2);
+	for (var n = 0; n < 16 - binary.length; n++) {
+		binary = "0" + binary;
+	}
 
-		//上下方向
-		if (this.direction == Direction.UP || this.direction == Direction.DOWN) {
+	for (var y0 = 0; y0 < 4; y0++) {
 
-			if (this.y + 2 < HEIGH_NUM) {
-				this.coords = [];
-				this.coords.push([this.x, this.y - 1]);
-				this.coords.push([this.x, this.y]);
-				this.coords.push([this.x, this.y + 1]);
-				this.coords.push([this.x, this.y + 2]);
-			}
+		for (var x0 = 0; x0 < 4; x0++) {
 
-		} else if (this.direction == Direction.LEFT || this.direction == Direction.RIGHT) {
+			var index = y0 * 4 + x0;
+			var bit = binary.indexOf(index);
 
-			if (this.x - 1 >= 0 && this.x + 2 < WIDTH_NUM) {
-				this.coords = [];
-				this.coords.push([this.x - 1, this.y]);
-				this.coords.push([this.x, this.y]);
-				this.coords.push([this.x + 1, this.y]);
-				this.coords.push([this.x + 2, this.y]);
+			var x = this.x + x0;
+			var y = this.y + y0;
+
+			if (bit == "1") {
+				var grids = this.game.grids;
+
+				var grid = grids[x][y];
+
+				grid.color = this.color;
 			}
 
 		}
 
-
 	}
 
-
-	//刷新画布每个grid的新颜色。
-	for (var i = 0; i < this.coords.length; i++) {
-
-		var coord = this.coords[i];
-		var x = coord[0];
-		var y = coord[1];
-
-
-		var grids = this.game.grids;
-
-		var grid = grids[x][y];
-
-
-		grid.color = this.color;
-
-
-	}
 
 	this.game.refreshStage();
 
@@ -187,11 +221,10 @@ function Grid() {
 	this.$dom = $("<span></span>");
 }
 
-Grid.colors = ["", "orange", "olive", "cornflowerblue", "cyan", "red"];
 
 Grid.prototype.refresh = function () {
 	this.$dom.removeAttr("class");
-	this.$dom.addClass(Grid.colors[this.color]);
+	this.$dom.addClass(Color.ALL[this.color]);
 }
 
 //游戏类，总控全局的。
@@ -220,32 +253,19 @@ Game.prototype.fillGrids = function () {
 			var grid = new Grid();
 			grid.x = x;
 			grid.y = y;
-
 			xArr.push(grid);
+
+			//将 grids 附着到 $stage上去 准备舞台
+			grid.$dom.css({"left": (x * grid.unit) + "px", "top": (y * grid.unit) + "px"});
+			this.$stage.append(grid.$dom);
 		}
 
 		this.grids.push(xArr)
 	}
 
-}
-
-
-//将 grids 附着到 $stage上去 准备舞台
-Game.prototype.prepareStage = function () {
-
-
-	for (var x = 0; x < WIDTH_NUM; x++) {
-		for (var y = 0; y < HEIGH_NUM; y++) {
-			var grid = this.grids[x][y];
-
-			grid.$dom.css({"left": (x * grid.unit) + "px", "top": (y * grid.unit) + "px"});
-
-			this.$stage.append(grid.$dom);
-		}
-
-	}
 
 }
+
 
 //刷新画布上的颜色
 Game.prototype.refreshStage = function () {
@@ -292,23 +312,21 @@ Game.prototype.init = function () {
 
 	this.listenEvent();
 
-
 	this.fillGrids();
-
-	this.prepareStage();
 
 	this.refreshStage();
 
 	this.shape = new Shape(this);
-	this.shape.x = 5;
-	this.shape.y = 5;
-	this.shape.color = 1;
+	this.shape.x = 0;
+	this.shape.y = 0;
+	this.shape.color = 2;
 	this.shape.direction = Direction.UP;
-	this.shape.type = 0;
+	this.shape.type = Type.I;
 
 	var that = this;
 
 	setInterval(function () {
+
 
 		that.shape.dropOneStep();
 
