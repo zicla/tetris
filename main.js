@@ -92,8 +92,6 @@ Shape.prototype.dropOneStep = function () {
 		this.hex = Type.ALL[this.type][this.direction];
 		this.setCategory(Category.MOVE);
 
-		this.game.printGrids();
-
 
 		this.game.refreshStage();
 
@@ -106,7 +104,25 @@ Shape.prototype.dropOneStep = function () {
 //往左移动一格
 Shape.prototype.moveLeftOneStep = function () {
 
-	if (this.x > 0) {
+	var canMove = false;
+
+	if (this.type == Type.I) {
+
+		if (this.direction == Direction.UP || this.direction == Direction.DOWN) {
+
+			if (this.x + 1 >= 1) {
+				canMove = true;
+			}
+
+		} else {
+			if (this.x >= 1) {
+				canMove = true;
+			}
+		}
+
+	}
+
+	if (canMove) {
 		this.hex = Type.ALL[this.type][this.direction];
 
 		this.setCategory(Category.GROUND);
@@ -120,10 +136,54 @@ Shape.prototype.moveLeftOneStep = function () {
 	}
 }
 
+//上：改变方向
+Shape.prototype.changeDirection = function () {
+
+
+	this.hex = Type.ALL[this.type][this.direction];
+
+	console.log("变形前：")
+	this.setCategory(Category.GROUND);
+
+
+	this.direction++;
+	if (this.direction > Direction.LEFT) {
+		this.direction = Direction.UP;
+	}
+
+	console.log("变形后：")
+	this.hex = Type.ALL[this.type][this.direction];
+	this.setCategory(Category.MOVE);
+
+
+	this.game.refreshStage();
+
+
+}
 //往右移动一格
 Shape.prototype.moveRightOneStep = function () {
 
-	if (this.x + 3 < WIDTH_NUM - 1) {
+
+	var canMove = false;
+
+	if (this.type == Type.I) {
+
+		if (this.direction == Direction.UP || this.direction == Direction.DOWN) {
+
+			if (this.x + 1 < WIDTH_NUM - 1) {
+				canMove = true;
+			}
+
+		} else {
+			if (this.x + 3 < WIDTH_NUM - 1) {
+				canMove = true;
+			}
+		}
+
+	}
+
+
+	if (canMove) {
 		this.hex = Type.ALL[this.type][this.direction];
 
 		this.setCategory(Category.GROUND);
@@ -145,7 +205,8 @@ Shape.prototype.setCategory = function (cate) {
 
 	// 0100 0100 0100 0100
 	var binary = this.hex.toString(2);
-	for (var n = 0; n < 16 - binary.length; n++) {
+	var whiteLen = 16 - binary.length;
+	for (var n = 0; n < whiteLen; n++) {
 		binary = "0" + binary;
 	}
 
@@ -295,7 +356,7 @@ Game.prototype.listenEvent = function () {
 
 		//上
 		if (e.keyCode == 38) {
-
+			that.shape.changeDirection();
 		}
 		//右
 		else if (e.keyCode == 39) {
