@@ -69,11 +69,73 @@ function Shape(game) {
 	//方向。4中方向 上右下左
 	this.direction = Direction.UP;
 
-	//颜色
-	this.color = 0;
 
 	//一个16进制数，代表了4*4的格子中哪4个grid高亮。
 	this.hex = 0xffff;
+
+}
+
+
+//往下面掉一格
+Shape.prototype.dropOneStep = function () {
+
+
+	if (this.y + 3 < HEIGH_NUM - 1) {
+
+		this.hex = Type.ALL[this.type][this.direction];
+
+		this.setCategory(Category.GROUND);
+
+
+		this.y++;
+
+		this.hex = Type.ALL[this.type][this.direction];
+		this.setCategory(Category.MOVE);
+
+		this.game.printGrids();
+
+
+		this.game.refreshStage();
+
+
+	}
+
+
+}
+
+//往左移动一格
+Shape.prototype.moveLeftOneStep = function () {
+
+	if (this.x > 0) {
+		this.hex = Type.ALL[this.type][this.direction];
+
+		this.setCategory(Category.GROUND);
+
+		this.x--;
+
+		this.hex = Type.ALL[this.type][this.direction];
+		this.setCategory(Category.MOVE);
+
+		this.game.refreshStage();
+	}
+}
+
+//往右移动一格
+Shape.prototype.moveRightOneStep = function () {
+
+	if (this.x + 3 < WIDTH_NUM - 1) {
+		this.hex = Type.ALL[this.type][this.direction];
+
+		this.setCategory(Category.GROUND);
+
+		this.x++;
+
+		this.hex = Type.ALL[this.type][this.direction];
+		this.setCategory(Category.MOVE);
+
+
+		this.game.refreshStage();
+	}
 
 }
 
@@ -86,26 +148,24 @@ Shape.prototype.setCategory = function (cate) {
 	for (var n = 0; n < 16 - binary.length; n++) {
 		binary = "0" + binary;
 	}
+
+
+	var i = 0;
 	for (var y0 = 0; y0 < 4; y0++) {
 
 		for (var x0 = 0; x0 < 4; x0++) {
 
 			var index = y0 * 4 + x0;
-			var bit = binary.indexOf(index);
 
+			var bit = binary.charAt(index);
 			var x = this.x + x0;
 			var y = this.y + y0;
 
-			if (bit == "1") {
+			if (bit == '1') {
+
 				var grids = this.game.grids;
-
 				var grid = grids[x][y];
-
 				grid.category = cate;
-
-				if (cate == Category.GROUND) {
-					grid.color = 0;
-				}
 
 			}
 
@@ -114,51 +174,6 @@ Shape.prototype.setCategory = function (cate) {
 	}
 
 
-}
-
-
-//往下面掉一格
-Shape.prototype.dropOneStep = function () {
-
-
-	if (this.y + 3 < HEIGH_NUM - 1) {
-		this.setCategory(Category.GROUND);
-
-		this.y++;
-
-		this.setCategory(Category.MOVE);
-	}
-
-	this.refresh();
-
-}
-
-//往左移动一格
-Shape.prototype.moveLeftOneStep = function () {
-
-	if (this.x > 0) {
-		this.setCategory(Category.GROUND);
-
-		this.x--;
-
-
-		this.setCategory(Category.MOVE);
-	}
-	this.refresh();
-}
-
-//往右移动一格
-Shape.prototype.moveRightOneStep = function () {
-
-	if (this.x + 3 < WIDTH_NUM - 1) {
-		this.setCategory(Category.GROUND);
-
-		this.x++;
-
-
-		this.setCategory(Category.MOVE);
-	}
-	this.refresh();
 }
 
 
@@ -170,38 +185,6 @@ Shape.prototype.moveRightOneStep = function () {
 //类别7 T型
 Shape.prototype.refresh = function () {
 
-	this.hex = Type.ALL[this.type][this.direction];
-
-	// 0100 0100 0100 0100
-	var binary = this.hex.toString(2);
-	for (var n = 0; n < 16 - binary.length; n++) {
-		binary = "0" + binary;
-	}
-
-	for (var y0 = 0; y0 < 4; y0++) {
-
-		for (var x0 = 0; x0 < 4; x0++) {
-
-			var index = y0 * 4 + x0;
-			var bit = binary.indexOf(index);
-
-			var x = this.x + x0;
-			var y = this.y + y0;
-
-			if (bit == "1") {
-				var grids = this.game.grids;
-
-				var grid = grids[x][y];
-
-				grid.color = this.color;
-			}
-
-		}
-
-	}
-
-
-	this.game.refreshStage();
 
 }
 
@@ -213,7 +196,6 @@ function Grid() {
 	this.y = 0;
 	this.unit = 30;
 
-	this.color = 0;
 
 	//0:地板，啥都不是。 1: 岩石，固定不动了。 2: 形状中的grid
 	this.category = Category.GROUND;
@@ -224,7 +206,14 @@ function Grid() {
 
 Grid.prototype.refresh = function () {
 	this.$dom.removeAttr("class");
-	this.$dom.addClass(Color.ALL[this.color]);
+	var color = Color.ALL[0];
+	if (this.category == Category.SOLID) {
+		color = Color.ALL[1];
+	} else if (this.category == Category.MOVE) {
+		color = Color.ALL[2];
+	}
+	this.$dom.addClass(color);
+
 }
 
 //游戏类，总控全局的。
@@ -240,6 +229,22 @@ function Game() {
 	//当前正在掉落的shape
 	this.shape = null;
 
+}
+
+//打印出当前的grids，为了方便我们调试。
+Game.prototype.printGrids = function () {
+	console.log("------print grids------")
+	for (var y = 0; y < HEIGH_NUM; y++) {
+
+		var line = "";
+		for (var x = 0; x < WIDTH_NUM; x++) {
+
+			var grid = this.grids[x][y];
+			line += grid.category;
+		}
+		console.log(line);
+	}
+	console.log("------finish print grids------")
 }
 
 
@@ -319,14 +324,12 @@ Game.prototype.init = function () {
 	this.shape = new Shape(this);
 	this.shape.x = 0;
 	this.shape.y = 0;
-	this.shape.color = 2;
 	this.shape.direction = Direction.UP;
 	this.shape.type = Type.I;
 
 	var that = this;
 
 	setInterval(function () {
-
 
 		that.shape.dropOneStep();
 
