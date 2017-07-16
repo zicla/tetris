@@ -59,17 +59,17 @@ Type.ALL[Type.L2] = [0x2260, 0x0470, 0x0644, 0x0e20,
 	[-1, WIDTH_NUM - 3, HEIGH_NUM - 4, -1],
 	[-1, WIDTH_NUM - 3, HEIGH_NUM - 3, 0]
 ];
-Type.ALL[Type.Z1] = [0x0630, 0x0264, 0x0c60, 0x2640,
+Type.ALL[Type.Z1] = [0x0630, 0x0264, 0x0630, 0x0264,
 	[-1, WIDTH_NUM - 4, HEIGH_NUM - 3, -1],
 	[-1, WIDTH_NUM - 3, HEIGH_NUM - 4, -1],
-	[-1, WIDTH_NUM - 3, HEIGH_NUM - 3, 0],
-	[0, WIDTH_NUM - 3, HEIGH_NUM - 3, -1]
+	[-1, WIDTH_NUM - 4, HEIGH_NUM - 3, -1],
+	[-1, WIDTH_NUM - 3, HEIGH_NUM - 4, -1]
 ];
-Type.ALL[Type.Z2] = [0x0360, 0x0462, 0x06c0, 0x4620,
+Type.ALL[Type.Z2] = [0x0360, 0x0462, 0x0360, 0x0462,
 	[-1, WIDTH_NUM - 4, HEIGH_NUM - 3, -1],
 	[-1, WIDTH_NUM - 3, HEIGH_NUM - 4, -1],
-	[-1, WIDTH_NUM - 3, HEIGH_NUM - 3, 0],
-	[0, WIDTH_NUM - 3, HEIGH_NUM - 3, -1]
+	[-1, WIDTH_NUM - 4, HEIGH_NUM - 3, -1],
+	[-1, WIDTH_NUM - 3, HEIGH_NUM - 4, -1]
 ];
 Type.ALL[Type.O] = [0x0660, 0x0660, 0x0660, 0x0660,
 	[-1, WIDTH_NUM - 3, HEIGH_NUM - 3, -1],
@@ -168,6 +168,10 @@ Shape.prototype.dropOneStep = function () {
 
 		return true;
 	} else {
+
+		this.setCategory(Category.SOLID);
+		this.game.refreshStage();
+
 		return false;
 	}
 
@@ -205,7 +209,7 @@ Shape.prototype.changeDirection = function () {
 	}
 
 
-	var nextShape = this.newShape(this.x - 1, this.y, newDirection);
+	var nextShape = this.newShape(this.x, this.y, newDirection);
 	if (nextShape.isValid()) {
 
 		this.setCategory(Category.GROUND);
@@ -431,25 +435,37 @@ Game.prototype.listenEvent = function () {
 
 Game.prototype.init = function () {
 
+	var that = this;
 	this.listenEvent();
 
 	this.fillGrids();
 
 	this.refreshStage();
 
+
 	this.shape = new Shape(this);
+
 	this.shape.x = 0;
 	this.shape.y = 0;
-	this.shape.direction = Direction.UP;
-	this.shape.type = Type.I;
+	this.shape.direction = random(0, 3);
+	this.shape.type = random(0, 6);
 
-	var that = this;
 
-	setInterval(function () {
+	var intervalHandler = setInterval(function () {
 
-		that.shape.dropOneStep();
+		var b = that.shape.dropOneStep();
 
-	}, 1000);
+		if (!b) {
+
+			that.shape.x = 0;
+			that.shape.y = 0;
+			that.shape.direction = random(0, 3);
+			that.shape.type = random(0, 6);
+		}
+
+
+	}, 200);
+
 
 }
 
