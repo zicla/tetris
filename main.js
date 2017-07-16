@@ -41,13 +41,48 @@ Type.O = 5;
 Type.T = 6;
 
 Type.ALL = [];
-Type.ALL[Type.I] = [0x4444, 0x0f00, 0x4444, 0x0f00];
-Type.ALL[Type.L1] = [0x4460, 0x0740, 0x0622, 0x02e0];
-Type.ALL[Type.L2] = [0x2260, 0x0470, 0x0644, 0x0e20];
-Type.ALL[Type.Z1] = [0x0630, 0x0264, 0x0c60, 0x2640];
-Type.ALL[Type.Z2] = [0x0360, 0x0462, 0x06c0, 0x4620];
-Type.ALL[Type.O] = [0x0660, 0x0660, 0x0660, 0x0660];
-Type.ALL[Type.T] = [0x04e0, 0x4640, 0x0720, 0x0262];
+Type.ALL[Type.I] = [0x4444, 0x0f00, 0x4444, 0x0f00,
+	[0, WIDTH_NUM - 2, HEIGH_NUM - 4, -1],
+	[-1, WIDTH_NUM - 4, HEIGH_NUM - 2, 0],
+	[0, WIDTH_NUM - 2, HEIGH_NUM - 4, -1],
+	[-1, WIDTH_NUM - 4, HEIGH_NUM - 2, 0]
+];
+Type.ALL[Type.L1] = [0x4460, 0x0740, 0x0622, 0x02e0,
+	[0, WIDTH_NUM - 3, HEIGH_NUM - 3, -1],
+	[-1, WIDTH_NUM - 4, HEIGH_NUM - 3, -1],
+	[-1, WIDTH_NUM - 3, HEIGH_NUM - 4, -1],
+	[-1, WIDTH_NUM - 3, HEIGH_NUM - 4, 0]
+];
+Type.ALL[Type.L2] = [0x2260, 0x0470, 0x0644, 0x0e20,
+	[0, WIDTH_NUM - 3, HEIGH_NUM - 3, -1],
+	[-1, WIDTH_NUM - 4, HEIGH_NUM - 3, -1],
+	[-1, WIDTH_NUM - 3, HEIGH_NUM - 4, -1],
+	[-1, WIDTH_NUM - 3, HEIGH_NUM - 3, 0]
+];
+Type.ALL[Type.Z1] = [0x0630, 0x0264, 0x0c60, 0x2640,
+	[-1, WIDTH_NUM - 4, HEIGH_NUM - 3, -1],
+	[-1, WIDTH_NUM - 3, HEIGH_NUM - 4, -1],
+	[-1, WIDTH_NUM - 3, HEIGH_NUM - 3, 0],
+	[0, WIDTH_NUM - 3, HEIGH_NUM - 3, -1]
+];
+Type.ALL[Type.Z2] = [0x0360, 0x0462, 0x06c0, 0x4620,
+	[-1, WIDTH_NUM - 4, HEIGH_NUM - 3, -1],
+	[-1, WIDTH_NUM - 3, HEIGH_NUM - 4, -1],
+	[-1, WIDTH_NUM - 3, HEIGH_NUM - 3, 0],
+	[0, WIDTH_NUM - 3, HEIGH_NUM - 3, -1]
+];
+Type.ALL[Type.O] = [0x0660, 0x0660, 0x0660, 0x0660,
+	[-1, WIDTH_NUM - 3, HEIGH_NUM - 3, -1],
+	[-1, WIDTH_NUM - 3, HEIGH_NUM - 3, -1],
+	[-1, WIDTH_NUM - 3, HEIGH_NUM - 3, -1],
+	[-1, WIDTH_NUM - 3, HEIGH_NUM - 3, -1]
+];
+Type.ALL[Type.T] = [0x04e0, 0x4640, 0x0720, 0x0262,
+	[-1, WIDTH_NUM - 3, HEIGH_NUM - 3, 0],
+	[0, WIDTH_NUM - 3, HEIGH_NUM - 3, -1],
+	[-1, WIDTH_NUM - 4, HEIGH_NUM - 3, -1],
+	[-1, WIDTH_NUM - 3, HEIGH_NUM - 4, -1]
+];
 
 
 function Color() {
@@ -70,93 +105,120 @@ function Shape(game) {
 	this.direction = Direction.UP;
 
 
-	//一个16进制数，代表了4*4的格子中哪4个grid高亮。
-	this.hex = 0xffff;
+}
+
+
+Shape.prototype.newShape = function (x, y, direction) {
+	var shape = new Shape(this.game);
+	shape.x = x;
+	shape.y = y;
+	shape.type = this.type;
+	shape.direction = direction;
+
+	return shape;
 
 }
 
 
-//往下面掉一格
+//判断当前的shape是合法的吗？ 不超过边界，不和障碍物重叠。
+Shape.prototype.isValid = function () {
+
+	//首先判断是否越界。
+	var edge = Type.ALL[this.type][4 + this.direction];
+
+	if (this.y < edge[0]) {
+		return false;
+	} else if (this.x > edge[1]) {
+		return false;
+	} else if (this.y > edge[2]) {
+		return false;
+	} else if (this.x < edge[3]) {
+		return false;
+	}
+
+
+	//考虑是否和现有的地板冲突。
+	var grids = this.getGrids();
+
+	for (var i = 0; i < grids.length; i++) {
+		var grid = grids[i];
+		if (grid.category == Category.SOLID) {
+			return false;
+		}
+	}
+
+	return true;
+
+}
+
+
+//往下面掉一格 能够继续掉落返回true,反之 返回 false.
 Shape.prototype.dropOneStep = function () {
 
 
-	if (this.y + 3 < HEIGH_NUM - 1) {
+	var nextShape = this.newShape(this.x, this.y + 1, this.direction);
 
-		this.hex = Type.ALL[this.type][this.direction];
+	if (nextShape.isValid()) {
 
 		this.setCategory(Category.GROUND);
-
-
 		this.y++;
-
-		this.hex = Type.ALL[this.type][this.direction];
 		this.setCategory(Category.MOVE);
-
 
 		this.game.refreshStage();
 
-
+		return true;
+	} else {
+		return false;
 	}
-
 
 }
 
 //往左移动一格
 Shape.prototype.moveLeftOneStep = function () {
 
-	var canMove = false;
-
-	if (this.type == Type.I) {
-
-		if (this.direction == Direction.UP || this.direction == Direction.DOWN) {
-
-			if (this.x + 1 >= 1) {
-				canMove = true;
-			}
-
-		} else {
-			if (this.x >= 1) {
-				canMove = true;
-			}
-		}
-
-	}
-
-	if (canMove) {
-		this.hex = Type.ALL[this.type][this.direction];
+	var nextShape = this.newShape(this.x - 1, this.y, this.direction);
+	if (nextShape.isValid()) {
 
 		this.setCategory(Category.GROUND);
-
 		this.x--;
-
-		this.hex = Type.ALL[this.type][this.direction];
 		this.setCategory(Category.MOVE);
 
 		this.game.refreshStage();
+
+		return true;
+
+	} else {
+		return false;
 	}
+
+
 }
 
 //上：改变方向
 Shape.prototype.changeDirection = function () {
 
 
-	this.hex = Type.ALL[this.type][this.direction];
-
-	console.log("变形前：")
-	this.setCategory(Category.GROUND);
-
-
-	this.direction++;
-	if (this.direction > Direction.LEFT) {
-		this.direction = Direction.UP;
+	var newDirection = this.direction;
+	newDirection++;
+	if (newDirection > Direction.LEFT) {
+		newDirection = Direction.UP;
 	}
 
-	console.log("变形后：")
-	this.hex = Type.ALL[this.type][this.direction];
-	this.setCategory(Category.MOVE);
 
+	var nextShape = this.newShape(this.x - 1, this.y, newDirection);
+	if (nextShape.isValid()) {
 
-	this.game.refreshStage();
+		this.setCategory(Category.GROUND);
+		this.direction = newDirection;
+		this.setCategory(Category.MOVE);
+
+		this.game.refreshStage();
+
+		return true;
+
+	} else {
+		return false;
+	}
 
 
 }
@@ -164,54 +226,38 @@ Shape.prototype.changeDirection = function () {
 Shape.prototype.moveRightOneStep = function () {
 
 
-	var canMove = false;
-
-	if (this.type == Type.I) {
-
-		if (this.direction == Direction.UP || this.direction == Direction.DOWN) {
-
-			if (this.x + 1 < WIDTH_NUM - 1) {
-				canMove = true;
-			}
-
-		} else {
-			if (this.x + 3 < WIDTH_NUM - 1) {
-				canMove = true;
-			}
-		}
-
-	}
-
-
-	if (canMove) {
-		this.hex = Type.ALL[this.type][this.direction];
+	var nextShape = this.newShape(this.x + 1, this.y, this.direction);
+	if (nextShape.isValid()) {
 
 		this.setCategory(Category.GROUND);
-
 		this.x++;
-
-		this.hex = Type.ALL[this.type][this.direction];
 		this.setCategory(Category.MOVE);
 
-
 		this.game.refreshStage();
+
+		return true;
+
+	} else {
+		return false;
 	}
+
 
 }
 
+//获取到当前shape所占用的grids. 四个grid.
+Shape.prototype.getGrids = function () {
 
-//将当前的形状全部置为一种category
-Shape.prototype.setCategory = function (cate) {
+	var hex = Type.ALL[this.type][this.direction];
 
 	// 0100 0100 0100 0100
-	var binary = this.hex.toString(2);
+	var binary = hex.toString(2);
 	var whiteLen = 16 - binary.length;
 	for (var n = 0; n < whiteLen; n++) {
 		binary = "0" + binary;
 	}
 
+	var grids = [];
 
-	var i = 0;
 	for (var y0 = 0; y0 < 4; y0++) {
 
 		for (var x0 = 0; x0 < 4; x0++) {
@@ -224,9 +270,7 @@ Shape.prototype.setCategory = function (cate) {
 
 			if (bit == '1') {
 
-				var grids = this.game.grids;
-				var grid = grids[x][y];
-				grid.category = cate;
+				grids.push(this.game.grids[x][y]);
 
 			}
 
@@ -234,7 +278,18 @@ Shape.prototype.setCategory = function (cate) {
 
 	}
 
+	return grids;
 
+}
+
+
+//将当前的形状全部置为一种category
+Shape.prototype.setCategory = function (cate) {
+	var grids = this.getGrids();
+	for (var i = 0; i < grids.length; i++) {
+		var grid = grids[i];
+		grid.category = cate;
+	}
 }
 
 
