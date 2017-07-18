@@ -51,7 +51,7 @@ Type.ALL[Type.L1] = [0x4460, 0x0740, 0x0622, 0x02e0,
 	[0, WIDTH_NUM - 3, HEIGH_NUM - 3, -1],
 	[-1, WIDTH_NUM - 4, HEIGH_NUM - 3, -1],
 	[-1, WIDTH_NUM - 3, HEIGH_NUM - 4, -1],
-	[-1, WIDTH_NUM - 3, HEIGH_NUM - 4, 0]
+	[-1, WIDTH_NUM - 3, HEIGH_NUM - 3, 0]
 ];
 Type.ALL[Type.L2] = [0x2260, 0x0470, 0x0644, 0x0e20,
 	[0, WIDTH_NUM - 3, HEIGH_NUM - 3, -1],
@@ -349,6 +349,15 @@ function Game() {
 	//当前正在掉落的shape
 	this.shape = null;
 
+	//得分
+	this.score = 0;
+
+}
+
+//在dom中更新得分
+Game.prototype.updateScore = function () {
+	$(".score").html(this.score);
+
 }
 
 //打印出当前的grids，为了方便我们调试。
@@ -432,6 +441,66 @@ Game.prototype.listenEvent = function () {
 	})
 }
 
+//消除第y这一行，如果能消除返回true，不能消除返回false.
+Game.prototype.eliminateOneLine = function (y) {
+
+	//判断能不能消除。
+	for (var x = 0; x <= WIDTH_NUM - 1; x++) {
+		var grid = this.grids[x][y];
+		if (grid.category != Category.SOLID) {
+			return false;
+		}
+	}
+
+	//这一行表示能够消除。
+	for (var y0 = y; y0 >= 0; y0--) {
+
+		for (var x0 = 0; x0 <= WIDTH_NUM - 1; x0++) {
+
+			if (y0 == 0) {
+				this.grids[x0][y0].category = Category.GROUND;
+			} else {
+				this.grids[x0][y0].category = this.grids[x0][y0 - 1].category;
+			}
+
+		}
+	}
+
+
+	return true;
+
+}
+
+Game.prototype.eliminateLines = function () {
+
+	var lines = 0;
+	for (var y = HEIGH_NUM - 1; y >= 0; y--) {
+
+		console.log("开始消除y = " + y);
+
+
+		while (this.eliminateOneLine(y)) {
+
+			lines++;
+
+		}
+
+
+	}
+
+	if (lines == 1) {
+		this.score += 100;
+	} else if (lines == 2) {
+		this.score += 300;
+	} else if (lines == 3) {
+		this.score += 500;
+	} else if (lines == 4) {
+		this.score += 1000;
+	}
+	this.updateScore();
+
+}
+
 
 Game.prototype.init = function () {
 
@@ -445,7 +514,7 @@ Game.prototype.init = function () {
 
 	this.shape = new Shape(this);
 
-	this.shape.x = 0;
+	this.shape.x = 5;
 	this.shape.y = 0;
 	this.shape.direction = random(0, 3);
 	this.shape.type = random(0, 6);
@@ -453,14 +522,20 @@ Game.prototype.init = function () {
 
 	var intervalHandler = setInterval(function () {
 
-		var b = that.shape.dropOneStep();
+		var canDrop = that.shape.dropOneStep();
 
-		if (!b) {
+		if (!canDrop) {
 
-			that.shape.x = 0;
+
+			//开始消除。
+			that.eliminateLines();
+
+
+			that.shape.x = 5;
 			that.shape.y = 0;
 			that.shape.direction = random(0, 3);
-			that.shape.type = random(0, 6);
+			//that.shape.type = random(0, 6);
+			that.shape.type = Type.I;
 		}
 
 

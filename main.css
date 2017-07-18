@@ -31,3 +31,6 @@
 .stage span.red {
   background-color: darkred;
 }
+.text-center {
+  text-align: center;
+}
