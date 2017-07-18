@@ -352,6 +352,9 @@ function Game() {
 	//得分
 	this.score = 0;
 
+	//掉落的时间 0表示最快。
+	this.interval = 200;
+
 }
 
 //在dom中更新得分
@@ -432,7 +435,7 @@ Game.prototype.listenEvent = function () {
 		}
 		//下
 		else if (e.keyCode == 40) {
-
+			that.interval = 0;
 		}
 		//左
 		else if (e.keyCode == 37) {
@@ -499,6 +502,9 @@ Game.prototype.eliminateLines = function () {
 	}
 	this.updateScore();
 
+
+	//速度设置为正常
+	this.interval = 200;
 }
 
 
@@ -520,26 +526,30 @@ Game.prototype.init = function () {
 	this.shape.type = random(0, 6);
 
 
+	var temp = 0;
 	var intervalHandler = setInterval(function () {
 
-		var canDrop = that.shape.dropOneStep();
 
-		if (!canDrop) {
+		if (temp > that.interval) {
 
+			temp = 0;
 
-			//开始消除。
-			that.eliminateLines();
+			var canDrop = that.shape.dropOneStep();
 
-
-			that.shape.x = 5;
-			that.shape.y = 0;
-			that.shape.direction = random(0, 3);
-			//that.shape.type = random(0, 6);
-			that.shape.type = Type.I;
+			if (!canDrop) {
+				//开始消除。
+				that.eliminateLines();
+				that.shape.x = 5;
+				that.shape.y = 0;
+				that.shape.direction = random(0, 3);
+				that.shape.type = random(0, 6);
+			}
+		} else {
+			temp += 10;
 		}
 
 
-	}, 200);
+	}, 10);
 
 
 }
