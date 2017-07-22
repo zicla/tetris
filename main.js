@@ -1,4 +1,4 @@
-//随机函数 a,b为整数 [a,b]
+//随机函数 a,b为整数 [a,b].
 function random(a, b) {
 
 	return a + Math.floor(Math.random() * (b - a + 1));
