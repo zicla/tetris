@@ -9,6 +9,7 @@ HEIGH_NUM = 20;
 
 function Direction() {
 }
+
 Direction.UP = 0;
 Direction.RIGHT = 1;
 Direction.DOWN = 2;
@@ -18,6 +19,7 @@ Direction.LEFT = 3;
 function Category() {
 
 }
+
 Category.GROUND = 0;
 Category.SOLID = 1;
 Category.MOVE = 2;
@@ -32,6 +34,7 @@ Category.MOVE = 2;
 function Type() {
 
 }
+
 Type.I = 0
 Type.L1 = 1;
 Type.L2 = 2;
@@ -88,6 +91,7 @@ Type.ALL[Type.T] = [0x04e0, 0x4640, 0x0720, 0x0262,
 function Color() {
 
 }
+
 Color.ALL = ["", "orange", "olive", "cornflowerblue", "cyan", "red"];
 
 //形状类
@@ -126,9 +130,7 @@ Shape.prototype.isValid = function () {
 	//首先判断是否越界。
 	var edge = Type.ALL[this.type][4 + this.direction];
 
-	if (this.y < edge[0]) {
-		return false;
-	} else if (this.x > edge[1]) {
+	if (this.x > edge[1]) {
 		return false;
 	} else if (this.y > edge[2]) {
 		return false;
@@ -248,7 +250,7 @@ Shape.prototype.moveRightOneStep = function () {
 
 }
 
-//获取到当前shape所占用的grids. 四个grid.
+//获取到当前shape所占用的grids. 四个grid. 有可能<4个，因为在上方舞台之外。
 Shape.prototype.getGrids = function () {
 
 	var hex = Type.ALL[this.type][this.direction];
@@ -272,7 +274,7 @@ Shape.prototype.getGrids = function () {
 			var x = this.x + x0;
 			var y = this.y + y0;
 
-			if (bit == '1') {
+			if (bit == '1' && y >= 0) {
 
 				grids.push(this.game.grids[x][y]);
 
@@ -363,9 +365,18 @@ Game.prototype.updateScore = function () {
 
 }
 
+//判断游戏是否结束
+Game.prototype.isGameOver = function () {
+
+
+	var grids = this.shape.getGrids();
+	console.log(grids);
+	return grids.length < 4;
+
+}
+
 //打印出当前的grids，为了方便我们调试。
 Game.prototype.printGrids = function () {
-	console.log("------print grids------")
 	for (var y = 0; y < HEIGH_NUM; y++) {
 
 		var line = "";
@@ -374,9 +385,7 @@ Game.prototype.printGrids = function () {
 			var grid = this.grids[x][y];
 			line += grid.category;
 		}
-		console.log(line);
 	}
-	console.log("------finish print grids------")
 }
 
 
@@ -479,16 +488,12 @@ Game.prototype.eliminateLines = function () {
 	var lines = 0;
 	for (var y = HEIGH_NUM - 1; y >= 0; y--) {
 
-		console.log("开始消除y = " + y);
-
 
 		while (this.eliminateOneLine(y)) {
 
 			lines++;
 
 		}
-
-
 	}
 
 	if (lines == 1) {
@@ -521,15 +526,14 @@ Game.prototype.init = function () {
 	this.shape = new Shape(this);
 
 	this.shape.x = 5;
-	this.shape.y = 0;
+	this.shape.y = -4;
 	this.shape.direction = random(0, 3);
 	this.shape.type = random(0, 6);
 
 
 	var temp = 0;
-	var intervalHandler = setInterval(function () {
 
-
+	function intervalFunc() {
 		if (temp > that.interval) {
 
 			temp = 0;
@@ -537,19 +541,31 @@ Game.prototype.init = function () {
 			var canDrop = that.shape.dropOneStep();
 
 			if (!canDrop) {
-				//开始消除。
-				that.eliminateLines();
-				that.shape.x = 5;
-				that.shape.y = 0;
-				that.shape.direction = random(0, 3);
-				that.shape.type = random(0, 6);
+
+				if (that.isGameOver()) {
+
+					console.error("游戏结束啦！");
+				} else {
+					//开始消除。
+					that.eliminateLines();
+					that.shape.x = 5;
+					that.shape.y = -4;
+					that.shape.direction = random(0, 3);
+					that.shape.type = random(0, 6);
+				}
+
+
 			}
 		} else {
 			temp += 10;
 		}
 
+	}
 
-	}, 10);
+	this.shape.setCategory(Category.MOVE);
+	this.refreshStage();
+
+	var intervalHandler = setInterval(intervalFunc, 10);
 
 
 }
