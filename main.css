@@ -30,7 +30,6 @@
 .game {
   width: 600px;
   height: 600px;
-  background-color: pink;
   position: relative;
   margin: 0 auto;
 }
