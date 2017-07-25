@@ -1,12 +1,8 @@
-.stage {
+.func {
   background-color: black;
-  width: 390px;
-  height: 600px;
-  margin: 0 auto;
   padding: 0;
-  position: relative;
 }
-.stage span {
+.func span {
   width: 30px;
   height: 30px;
   position: absolute;
@@ -16,19 +12,93 @@
   border-bottom: 1px solid #aaa;
   box-sizing: border-box;
 }
-.stage span.orange {
+.func span.orange {
   background-color: orange;
 }
-.stage span.olive {
+.func span.olive {
   background-color: olive;
 }
-.stage span.cornflowerblue {
+.func span.cornflowerblue {
   background-color: cornflowerblue;
 }
-.stage span.cyan {
+.func span.cyan {
   background-color: cyan;
 }
-.stage span.red {
+.func span.red {
+  background-color: darkred;
+}
+.game {
+  width: 600px;
+  height: 600px;
+  background-color: pink;
+  position: relative;
+  margin: 0 auto;
+}
+.game .stage {
+  width: 390px;
+  height: 600px;
+  position: relative;
+  float: left;
+  background-color: black;
+  padding: 0;
+}
+.game .stage span {
+  width: 30px;
+  height: 30px;
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  border-right: 1px solid #aaa;
+  border-bottom: 1px solid #aaa;
+  box-sizing: border-box;
+}
+.game .stage span.orange {
+  background-color: orange;
+}
+.game .stage span.olive {
+  background-color: olive;
+}
+.game .stage span.cornflowerblue {
+  background-color: cornflowerblue;
+}
+.game .stage span.cyan {
+  background-color: cyan;
+}
+.game .stage span.red {
+  background-color: darkred;
+}
+.game .box {
+  width: 120px;
+  height: 120px;
+  float: left;
+  position: relative;
+  margin-left: 30px;
+  background-color: black;
+  padding: 0;
+}
+.game .box span {
+  width: 30px;
+  height: 30px;
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  border-right: 1px solid #aaa;
+  border-bottom: 1px solid #aaa;
+  box-sizing: border-box;
+}
+.game .box span.orange {
+  background-color: orange;
+}
+.game .box span.olive {
+  background-color: olive;
+}
+.game .box span.cornflowerblue {
+  background-color: cornflowerblue;
+}
+.game .box span.cyan {
+  background-color: cyan;
+}
+.game .box span.red {
   background-color: darkred;
 }
 .text-center {

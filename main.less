@@ -2,13 +2,9 @@
 @widthNum: 13;
 @heightNum: 20;
 
-.stage {
+.func {
 	background-color: black;
-	width: @grid*@widthNum;
-	height: @grid*@heightNum;
-	margin: 0 auto;
 	padding: 0;
-	position: relative;
 
 	@grid-border-color: #aaa;
 	span {
@@ -37,6 +33,34 @@
 			background-color: darkred;
 		}
 
+	}
+}
+
+.game {
+
+	width: 600px;
+	height: 600px;
+	background-color: pink;
+	position: relative;
+	margin: 0 auto;
+
+	.stage {
+		width: @grid*@widthNum;
+		height: @grid*@heightNum;
+
+		position: relative;
+		float: left;
+		.func;
+	}
+
+	.box {
+		width: @grid*4;
+		height: @grid*4;
+		float: left;
+		position: relative;
+		margin-left: @grid;
+
+		.func;
 	}
 }
 

@@ -251,7 +251,11 @@ Shape.prototype.moveRightOneStep = function () {
 }
 
 //获取到当前shape所占用的grids. 四个grid. 有可能<4个，因为在上方舞台之外。
-Shape.prototype.getGrids = function () {
+Shape.prototype.getGrids = function (platform) {
+
+	if (!platform) {
+		platform = this.game.grids;
+	}
 
 	var hex = Type.ALL[this.type][this.direction];
 
@@ -276,7 +280,7 @@ Shape.prototype.getGrids = function () {
 
 			if (bit == '1' && y >= 0) {
 
-				grids.push(this.game.grids[x][y]);
+				grids.push(platform[x][y]);
 
 			}
 
@@ -351,11 +355,22 @@ function Game() {
 	//当前正在掉落的shape
 	this.shape = null;
 
+	//下一个将要出现的shape
+	this.previewShape = null;
+
+	//预览盒子
+	this.$box = $(".box");
+	this.boxGrids = [];
+
 	//得分
 	this.score = 0;
 
 	//掉落的时间 0表示最快。
 	this.interval = 200;
+
+
+	//时钟计时器
+	this.intervalHandler = null;
 
 }
 
@@ -370,7 +385,6 @@ Game.prototype.isGameOver = function () {
 
 
 	var grids = this.shape.getGrids();
-	console.log(grids);
 	return grids.length < 4;
 
 }
@@ -391,6 +405,8 @@ Game.prototype.printGrids = function () {
 
 //将自身属性 grids 填充完毕
 Game.prototype.fillGrids = function () {
+
+	//装填舞台
 	for (var x = 0; x < WIDTH_NUM; x++) {
 
 		var xArr = [];
@@ -410,6 +426,26 @@ Game.prototype.fillGrids = function () {
 	}
 
 
+	//装填预览盒子
+	for (var x0 = 0; x0 < 4; x0++) {
+
+		var xArray = [];
+
+		for (var y0 = 0; y0 < 4; y0++) {
+			var grid0 = new Grid();
+			grid0.x = x0;
+			grid0.y = y0;
+			xArray.push(grid0);
+
+			//将 grids 附着到 $stage上去 准备舞台
+			grid0.$dom.css({"left": (x0 * grid0.unit) + "px", "top": (y0 * grid0.unit) + "px"});
+			this.$box.append(grid0.$dom);
+		}
+
+		this.boxGrids.push(xArray)
+	}
+
+
 }
 
 
@@ -423,9 +459,8 @@ Game.prototype.refreshStage = function () {
 		}
 
 	}
-
-
 }
+
 
 //监听键盘点击事件
 Game.prototype.listenEvent = function () {
@@ -513,6 +548,49 @@ Game.prototype.eliminateLines = function () {
 }
 
 
+Game.prototype.refreshBox = function () {
+
+	//第一步，更新previewShape
+	if (!this.previewShape) {
+		this.previewShape = new Shape(this);
+		this.previewShape.x = 0;
+		this.previewShape.y = 0;
+	}
+
+	this.previewShape.direction = random(0, 3);
+	this.previewShape.type = random(0, 6);
+
+	//第二步更新grid的数据 和更新UI.
+	for (var x = 0; x < 4; x++) {
+		for (var y = 0; y < 4; y++) {
+			var grid = this.boxGrids[x][y];
+			grid.category = Category.GROUND
+			grid.refresh();
+		}
+	}
+
+	var grids = this.previewShape.getGrids(this.boxGrids);
+	for (var m = 0; m < grids.length; m++) {
+		grids[m].category = Category.SOLID;
+		grids[m].refresh();
+	}
+
+
+}
+
+
+Game.prototype.refreshShape = function () {
+
+	if (!this.shape) {
+		this.shape = new Shape(this);
+	}
+
+	this.shape.x = 5;
+	this.shape.y = -4;
+	this.shape.direction = this.previewShape.direction;
+	this.shape.type = this.previewShape.type;
+}
+
 Game.prototype.init = function () {
 
 	var that = this;
@@ -522,13 +600,9 @@ Game.prototype.init = function () {
 
 	this.refreshStage();
 
+	this.refreshBox();
 
-	this.shape = new Shape(this);
-
-	this.shape.x = 5;
-	this.shape.y = -4;
-	this.shape.direction = random(0, 3);
-	this.shape.type = random(0, 6);
+	this.refreshShape();
 
 
 	var temp = 0;
@@ -544,16 +618,23 @@ Game.prototype.init = function () {
 
 				if (that.isGameOver()) {
 
-					console.error("游戏结束啦！");
+
+					console.info("游戏结束啦！");
+
+					if (that.intervalHandler) {
+						clearInterval(that.intervalHandler)
+					} else {
+						console.error("intervalHandler 出错啦。")
+					}
+
 				} else {
 					//开始消除。
 					that.eliminateLines();
-					that.shape.x = 5;
-					that.shape.y = -4;
-					that.shape.direction = random(0, 3);
-					that.shape.type = random(0, 6);
-				}
 
+					that.refreshShape();
+					that.refreshBox();
+
+				}
 
 			}
 		} else {
@@ -565,7 +646,7 @@ Game.prototype.init = function () {
 	this.shape.setCategory(Category.MOVE);
 	this.refreshStage();
 
-	var intervalHandler = setInterval(intervalFunc, 10);
+	this.intervalHandler = setInterval(intervalFunc, 10);
 
 
 }
