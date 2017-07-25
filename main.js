@@ -448,6 +448,17 @@ Game.prototype.fillGrids = function () {
 
 }
 
+//清理舞台垃圾
+Game.prototype.broomStage = function () {
+	for (var x = 0; x < WIDTH_NUM; x++) {
+		for (var y = 0; y < HEIGH_NUM; y++) {
+			var grid = this.grids[x][y];
+			grid.category = Category.GROUND;
+			grid.refresh();
+		}
+
+	}
+}
 
 //刷新画布上的颜色
 Game.prototype.refreshStage = function () {
@@ -486,6 +497,12 @@ Game.prototype.listenEvent = function () {
 			that.shape.moveLeftOneStep();
 		}
 	})
+
+	$(".restart").click(function () {
+
+		that.start();
+		console.log("重新开始。");
+	});
 }
 
 //消除第y这一行，如果能消除返回true，不能消除返回false.
@@ -591,18 +608,26 @@ Game.prototype.refreshShape = function () {
 	this.shape.type = this.previewShape.type;
 }
 
-Game.prototype.init = function () {
+//开始或者重新开始。
+Game.prototype.start = function () {
 
 	var that = this;
-	this.listenEvent();
 
-	this.fillGrids();
+	if (that.intervalHandler) {
+		clearInterval(that.intervalHandler)
+	}
 
-	this.refreshStage();
 
+	//预览框刷新
 	this.refreshBox();
-
+	//正在掉落的形状刷新。
 	this.refreshShape();
+	//记分版清零
+	this.score = 0;
+	this.updateScore();
+
+	//舞台垃圾清理
+	this.broomStage();
 
 
 	var temp = 0;
@@ -643,12 +668,20 @@ Game.prototype.init = function () {
 
 	}
 
-	this.shape.setCategory(Category.MOVE);
-	this.refreshStage();
-
 	this.intervalHandler = setInterval(intervalFunc, 10);
 
 
+}
+
+Game.prototype.init = function () {
+
+	var that = this;
+	this.listenEvent();
+
+	this.fillGrids();
+
+
+	this.start();
 }
 
 
