@@ -6,6 +6,8 @@ function random(a, b) {
 
 WIDTH_NUM = 13;
 HEIGH_NUM = 20;
+//每个小格子边长30px
+UNIT = 30;
 
 function Direction() {
 }
@@ -320,7 +322,7 @@ function Grid() {
 
 	this.x = 0;
 	this.y = 0;
-	this.unit = 30;
+	this.unit = UNIT;
 
 
 	//0:地板，啥都不是。 1: 岩石，固定不动了。 2: 形状中的grid
@@ -473,8 +475,96 @@ Game.prototype.refreshStage = function () {
 }
 
 
+Game.prototype.bindTouchEvents = function () {
+
+	var that = this;
+
+	var body = document.getElementById('body');
+
+	var startX = 0;
+	var startY = 0;
+	var lastX = 0;
+	var lastY = 0;
+	var lastStep = 0;
+
+	var statTime = null;
+
+	body.addEventListener("touchstart", function (e) {
+
+		var x = e.touches[0].pageX;
+		var y = e.touches[0].pageY;
+
+		console.log("touchstart x:" + x + " y:" + y);
+
+		startX = x;
+		lastX = x;
+		startY = y;
+		lastY = y;
+		lastStep = 0;
+		statTime = new Date();
+
+	}, false);
+
+
+	body.addEventListener("touchmove", function (e) {
+
+		var x = e.touches[0].pageX;
+		var y = e.touches[0].pageY;
+
+
+		if (Math.abs(lastX - x) > Math.abs(lastY - y)) {
+
+			//判断左右移动
+			var step = 0;
+			var i = 0;
+			step = Math.floor((x - startX) / UNIT);
+			if (step < 0) {
+				step++;
+			}
+
+			//往右滑动了。
+			var deltaStep = step - lastStep;
+			if (deltaStep >= 1) {
+				for (i = 0; i < deltaStep; i++) {
+					that.shape.moveRightOneStep();
+				}
+				lastStep = step;
+			}
+			//向左滑动了。
+			else if (deltaStep <= -1) {
+				for (i = 0; i < -deltaStep; i++) {
+					that.shape.moveLeftOneStep();
+				}
+				lastStep = step;
+			}
+
+		} else {
+			//判断快速向下。
+			if (y - startY > UNIT * 2) {
+				that.interval = 0;
+			}
+		}
+
+
+		lastX = x;
+		lastY = y;
+
+	}, false);
+	body.addEventListener("touchend", function (e) {
+
+		//非常短暂的时间我们认为是点击。
+		if (new Date().getTime() - statTime.getTime() < 200) {
+			that.shape.changeDirection();
+		}
+
+		console.log("touchend");
+	}, false);
+
+};
+
+
 //监听键盘点击事件
-Game.prototype.listenEvent = function () {
+Game.prototype.bindKeyEvent = function () {
 
 	var that = this;
 
@@ -676,7 +766,8 @@ Game.prototype.start = function () {
 Game.prototype.init = function () {
 
 	var that = this;
-	this.listenEvent();
+	this.bindKeyEvent();
+	this.bindTouchEvents();
 
 	this.fillGrids();
 
