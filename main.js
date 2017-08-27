@@ -483,13 +483,17 @@ Game.prototype.bindTouchEvents = function () {
 
 	var startX = 0;
 	var startY = 0;
+	var moveX = 0;
+	var moveY = 0;
+
 	var lastX = 0;
 	var lastY = 0;
 	var lastStep = 0;
 
 	var statTime = null;
 
-	var isDrop = false;
+	var isFastDrop = false;
+	var isContinueDrop = false;
 	var isMoving = false;
 
 	body.addEventListener("touchstart", function (e) {
@@ -504,10 +508,11 @@ Game.prototype.bindTouchEvents = function () {
 		startY = y;
 		lastY = y;
 		lastStep = 0;
-		statTime = new Date();
+		statTime = (new Date()).getTime();
 
 		isMoving = false;
-		isDrop = false;
+		isFastDrop = false;
+		isContinueDrop = false;
 
 	}, false);
 
@@ -516,6 +521,8 @@ Game.prototype.bindTouchEvents = function () {
 
 		var x = e.touches[0].pageX;
 		var y = e.touches[0].pageY;
+		moveX = x;
+		moveY = y;
 
 
 		if (Math.abs(startX - x) > Math.abs(startY - y)) {
@@ -547,16 +554,22 @@ Game.prototype.bindTouchEvents = function () {
 
 		} else {
 
-			if (!isMoving && !isDrop) {
-				//判断快速向下。
-				if (y - startY > UNIT * 2) {
-					that.interval = 0;
-					isDrop = true;
+			if (!isMoving) {
+				var currentTime = new Date().getTime();
+
+				if (currentTime - statTime > 50 && y - startY > UNIT) {
+					console.log("isContinueDrop")
+					//持续下降。
+					isContinueDrop = true;
+					that.interval = 30;
+
+				} else {
+					isContinueDrop = false;
+					that.interval = 200
 				}
 			}
 
 		}
-
 
 		lastX = x;
 		lastY = y;
@@ -564,13 +577,34 @@ Game.prototype.bindTouchEvents = function () {
 	}, false);
 	body.addEventListener("touchend", function (e) {
 
-		//非常短暂的时间我们认为是点击。
-		if (!isDrop && !isMoving) {
-			if (new Date().getTime() - statTime.getTime() < 200) {
-				that.shape.changeDirection();
+		//无论如何一旦手指离开，结束持续下降。
+		isContinueDrop = false;
+		that.interval = 200;
+
+
+		var currentTime = new Date().getTime();
+		//判断是否为快速下降。
+		if (!isMoving) {
+
+			//时间又短又快，我们认为是快速下降。
+			console.log("moveY - startY");
+			console.log(moveY - startY);
+			if (moveY - startY > UNIT * 2 && currentTime - statTime < 200) {
+				console.log("isFastDrop")
+				that.interval = 0;
+				isFastDrop = true;
+
+			} else {
+
+				//非常短暂的时间我们认为是点击。
+
+				if (currentTime - statTime < 200) {
+					that.shape.changeDirection();
+				}
 			}
 
 		}
+
 
 		console.log("touchend");
 	}, false);
