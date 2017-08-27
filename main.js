@@ -490,6 +490,7 @@ Game.prototype.bindTouchEvents = function () {
 	var statTime = null;
 
 	var isDrop = false;
+	var isMoving = false;
 
 	body.addEventListener("touchstart", function (e) {
 
@@ -505,6 +506,9 @@ Game.prototype.bindTouchEvents = function () {
 		lastStep = 0;
 		statTime = new Date();
 
+		isMoving = false;
+		isDrop = false;
+
 	}, false);
 
 
@@ -512,7 +516,7 @@ Game.prototype.bindTouchEvents = function () {
 
 		var x = e.touches[0].pageX;
 		var y = e.touches[0].pageY;
-		isDrop = false;
+
 
 		if (Math.abs(startX - x) > Math.abs(startY - y)) {
 
@@ -528,23 +532,29 @@ Game.prototype.bindTouchEvents = function () {
 			var deltaStep = step - lastStep;
 			if (deltaStep > 0) {
 				for (i = 0; i < deltaStep; i++) {
+					isMoving = true;
 					that.shape.moveRightOneStep();
 				}
 			}
 			//向左滑动了。
 			else if (deltaStep < 0) {
 				for (i = 0; i < -deltaStep; i++) {
+					isMoving = true;
 					that.shape.moveLeftOneStep();
 				}
 			}
 			lastStep = step;
 
 		} else {
-			//判断快速向下。
-			if (y - startY > UNIT * 2) {
-				that.interval = 0;
-				isDrop = true;
+
+			if (!isMoving && !isDrop) {
+				//判断快速向下。
+				if (y - startY > UNIT * 2) {
+					that.interval = 0;
+					isDrop = true;
+				}
 			}
+
 		}
 
 
@@ -555,7 +565,7 @@ Game.prototype.bindTouchEvents = function () {
 	body.addEventListener("touchend", function (e) {
 
 		//非常短暂的时间我们认为是点击。
-		if (!isDrop) {
+		if (!isDrop && !isMoving) {
 			if (new Date().getTime() - statTime.getTime() < 200) {
 				that.shape.changeDirection();
 			}
